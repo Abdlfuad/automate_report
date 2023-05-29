@@ -19,15 +19,16 @@ data = json.load(f)
 webhook_url = data['webhook_url']
 
 ##PART 1 - LOAD DATASET\
-df = pd.read_excel(input_file)
+df = pd.read_excel(input_file) #--> membaca file
+df['Date'] = pd.to_datetime(df['Date']).dt.date #-->menampilkan date
 #print(df.head())
 
 #Penjualan Total per Gender & Product Line
-df = df.pivot_table(index='Gender', 
-                    columns='Product line', 
+df = df.pivot_table(index=['Gender','Date'],
+                    columns='Product line',
                     values='Total', 
                     aggfunc='sum').round()
-#print(df.head())
+print(df.head())
 print('Save dataframe to excel...')
 
 df.to_excel(output_file, 
@@ -61,14 +62,14 @@ wb.active.column_dimensions = dim_holder
 barchart = BarChart()
 
 data = Reference(wb.active, 
-                min_col=min_column+1,
-                max_col=max_column,
-                min_row=min_row,
+                min_col=min_column+2, #+2 kolom supaya membaca kolom C
+                max_col=max_column, #kolom H
+                min_row=min_row, 
                 max_row=max_row
                 )
 
 categories = Reference(wb.active,
-                        min_col=min_column,
+                        min_col=min_column+1,
                         max_col=min_column,
                         min_row=min_row+1,
                         max_row=max_row
@@ -77,11 +78,13 @@ categories = Reference(wb.active,
 barchart.add_data(data, titles_from_data=True)
 barchart.set_categories(categories)
 
-
-wb.active.add_chart(barchart, 'B12')
+wb.active.add_chart(barchart, 'J12')
 barchart.title = 'Sales berdasarkan Produk'
 barchart.style = 2
-#wb.save(output_file)
+#atur dimensi tabel
+barchart.height = 50 
+barchart.width = 180
+wb.save(output_file)
 
 
 #Total dari Penjualan
@@ -91,7 +94,7 @@ alphabet_excel = alphabet[:max_column]
 #[A,B,C,D,E,F,G]
 for i in alphabet_excel:
     if i != 'A':
-        wb.active[f'{i}{max_row+1}'] = f'=SUM({i}{min_row+1}:{i}{max_row})' #B6 + B7
+        wb.active[f'{i}{max_row+1}'] = f'=SUM({i}{min_row+1}:{i}{max_row})' 
         wb.active[f'{i}{max_row+1}'].style = 'Currency'
 
 wb.active[f'{alphabet_excel[0]}{max_row+1}'] = 'Total'
